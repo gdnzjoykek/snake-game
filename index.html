@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fütüristik Kişisel Pano</title>
+    <!-- Google Fonts: Orbitron for clock, Inter for UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-start: #0f172a;
+            --bg-color-end: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(56, 189, 248, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            /* Arka plan animasyonlu geçiş ayarı */
+            background: linear-gradient(135deg, var(--bg-color-start), var(--bg-color-end));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background 1.5s ease-in-out;
+        }
+
+        .dashboard {
+            position: relative;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 4rem 5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15);
+            text-align: center;
+            min-width: 450px;
+            transition: box-shadow 1s ease, border-color 1s ease;
+        }
+
+        .clock {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 6rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+            transition: text-shadow 1s ease;
+        }
+
+        .clock span {
+            color: var(--accent);
+        }
+
+        .date {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+
+        .weather-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid var(--glass-border);
+            transition: border-color 1s ease;
+        }
+
+        .weather-icon {
+            font-size: 3.5rem;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+        }
+
+        .weather-info {
+            text-align: left;
+        }
+
+        .temp {
+            font-size: 3rem;
+            font-weight: 500;
+            line-height: 1;
+            margin-bottom: 0.2rem;
+            color: var(--text-main);
+        }
+
+        .desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            text-transform: capitalize;
+        }
+        
+        .glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            border-radius: 50%;
+            filter: blur(180px);
+            opacity: 0.15;
+            z-index: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 6s infinite alternate;
+            transition: background 1s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.1; }
+            100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.25; }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Arkadaki parıltı efekti -->
+    <div class="glow"></div>
+    
+    <!-- Ana Pano -->
+    <div class="dashboard">
+        <div class="clock" id="clock">00<span>:</span>00<span>:</span>00</div>
+        <div class="date" id="date">Takvim Yükleniyor...</div>
+        
+        <div class="weather-container">
+            <div class="weather-icon" id="weather-icon">
+                <div class="loader"></div>
+            </div>
+            <div class="weather-info">
+                <div class="temp" id="temp">--°C</div>
+                <div class="desc" id="weather-desc">Hava Durumu Yükleniyor</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elementleri
+        const clockEl = document.getElementById('clock');
+        const dateEl = document.getElementById('date');
+        const tempEl = document.getElementById('temp');
+        const descEl = document.getElementById('weather-desc');
+        const iconEl = document.getElementById('weather-icon');
+        const root = document.documentElement;
+
+        // Saat ve Tarih Güncelleme
+        function updateTime() {
+            const now = new Date();
+            
+            // Saat
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            // Saniyeleri ve dakikaları ayıran noktalara renk katıyoruz
+            clockEl.innerHTML = `${hours}<span>:</span>${minutes}<span>:</span>${seconds}`;
+
+            // Tarih
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('tr-TR', options);
+
+            // Arka Plan Rengi: Her saat başı veya saniyede bir kontrol edilebilir (saate göre değişir)
+            updateThemeByHour(now.getHours());
+        }
+
+        // Günün saatine göre tema değişikliği
+        function updateThemeByHour(hour) {
+            let startColor, endColor, accentColor;
+
+            if (hour >= 6 && hour < 12) {
+                // Sabah - Şafak Renkleri (Hafif aydınlık mavimsi)
+                startColor = '#0f172a';
+                endColor = '#1e1b4b';
+                accentColor = '#60a5fa'; // Açık mavi vurgu
+            } else if (hour >= 12 && hour < 18) {
+                // Öğle - Parlak Renkler (Canlı mavi)
+                startColor = '#020617';
+                endColor = '#172554';
+                accentColor = '#38bdf8'; // Gök mavisi vurgu
+            } else if (hour >= 18 && hour < 21) {
+                // Akşam - Gün Batımı/Akşam (Mor-lacivert)
+                startColor = '#0f172a';
+                endColor = '#312e81';
+                accentColor = '#818cf8'; // İndigo vurgu
+            } else {
+                // Gece (Derin karanlık, neon cyan)
+                startColor = '#020617';
+                endColor = '#000000';
+                accentColor = '#22d3ee'; // Neon Cyan vurgu
+            }
+
+            // CSS Değişkenlerini güncelle
+            root.style.setProperty('--bg-color-start', startColor);
+            root.style.setProperty('--bg-color-end', endColor);
+            root.style.setProperty('--accent', accentColor);
+        }
+
+        // Açık kaynak ve ücretsiz Open-Meteo API (API anahtarı gerekmez) kullanarak hava durumu çekme
+        async function fetchWeather(lat, lon) {
+            try {
+                // WMO (Dünya Meteoroloji Örgütü) kodlarını açıklamalara ve emojilere (veya ikonlara) çevirme
+                const weatherCodes = {
+                    0: { desc: 'Açık, Güneşli', icon: '☀️' },
+                    1: { desc: 'Çoğunlukla Açık', icon: '🌤️' },
+                    2: { desc: 'Parçalı Bulutlu', icon: '⛅' },
+                    3: { desc: 'Kapalı, Bulutlu', icon: '☁️' },
+                    45:{ desc: 'Sisli', icon: '🌫️' },
+                    48:{ desc: 'Kırağılı Sis', icon: '🌫️' },
+                    51:{ desc: 'Hafif Çiseleme', icon: '🌧️' },
+                    53:{ desc: 'Orta Şiddette Çiseleme', icon: '🌧️' },
+                    55:{ desc: 'Yoğun Çiseleme', icon: '🌧️' },
+                    61:{ desc: 'Hafif Yağmurlu', icon: '🌦️' },
+                    63:{ desc: 'Yağmurlu', icon: '🌧️' },
+                    65:{ desc: 'Şiddetli Yağmur', icon: '⛈️' },
+                    71:{ desc: 'Hafif Kar Yağışlı', icon: '🌨️' },
+                    73:{ desc: 'Kar Yağışlı', icon: '❄️' },
+                    75:{ desc: 'Yoğun Kar Yağışlı', icon: '❄️' },
+                    95:{ desc: 'Gök Gürültülü Fırtına', icon: '🌩️' }
+                };
+
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const current = data.current_weather;
+                const codeData = weatherCodes[current.weathercode] || { desc: 'Bilinmiyor', icon: '🌡️' };
+
+                // Arayüzü güncelle
+                tempEl.textContent = `${Math.round(current.temperature)}°C`;
+                descEl.textContent = codeData.desc;
+                iconEl.textContent = codeData.icon;
+
+            } catch (error) {
+                console.error("Hava durumu alınamadı:", error);
+                tempEl.textContent = '--°C';
+                descEl.textContent = 'Bağlantı Hatası';
+                iconEl.textContent = '❌';
+            }
+        }
+
+        // İlk Yükleme (Init)
+        function init() {
+            // Saati anında başlat
+            updateTime();
+            // Her saniye saati güncelle
+            setInterval(updateTime, 1000);
+
+            // Kullanıcıdan konum izni isteyip hava durumunu al
+            if (navigator.geolocation) {
+                // Hava durumunu çekerken bekleme ikonu göstereceği için bekliyor
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        fetchWeather(position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        console.warn("Konum izni verilmedi veya alınamadı. Varsayılan konum (İstanbul) kullanılıyor.");
+                        // Konum verilmezse İstanbul'un enlem/boylamını varsayılan olarak kullan
+                        fetchWeather(41.0082, 28.9784);
+                    }
+                );
+            } else {
+                // Tarayıcı desteklemiyorsa varsayılan konum
+                fetchWeather(41.0082, 28.9784);
+            }
+
+            // Hava durumunu her 15 dakikada bir güncelle
+            setInterval(() => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+                        () => fetchWeather(41.0082, 28.9784)
+                    );
+                }
+            }, 15 * 60 * 1000);
+        }
+
+        // Sayfa DOM'u hazır olduğunda çalıştır
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
