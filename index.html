@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fütüristik Kişisel Pano</title>
-    <!-- Google Fonts: Orbitron for clock, Inter for UI -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500&display=swap" rel="stylesheet">
+    <title>Cyberpunk Snake</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
         :root {
-            --bg-color-start: #0f172a;
-            --bg-color-end: #020617;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --glass-bg: rgba(15, 23, 42, 0.6);
-            --glass-border: rgba(56, 189, 248, 0.2);
+            --neon-green: #0f0;
+            --neon-pink: #f0f;
+            --neon-blue: #0ff;
+            --dark-bg: #050505;
+            --grid-color: rgba(0, 255, 255, 0.05);
+            --glass-bg: rgba(10, 10, 10, 0.6);
+            --glass-border: rgba(0, 255, 255, 0.2);
         }
 
         * {
@@ -24,289 +24,601 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-main);
-            /* Arka plan animasyonlu geçiş ayarı */
-            background: linear-gradient(135deg, var(--bg-color-start), var(--bg-color-end));
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Orbitron', monospace;
             overflow: hidden;
-            transition: background 1.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            /* Ince Grid (Izgara) Yapisi */
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            user-select: none;
         }
 
-        .dashboard {
+        /* CRT Tarama Cizgisi (Scanline) Efekti */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        /* Ekran Koselerindeki Karartma (Vignette) */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.8) 100%);
+            z-index: 49;
+            pointer-events: none;
+        }
+
+        .ui-container {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        /* Glassmorphism Skor Tabelasi */
+        .scoreboard {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 15px 40px;
+            display: flex;
+            gap: 50px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1), inset 0 0 10px rgba(0, 255, 255, 0.05);
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue), 0 0 15px var(--neon-blue);
+            transition: transform 0.1s ease;
+        }
+
+        .high-score-value {
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px var(--neon-pink), 0 0 15px var(--neon-pink);
+        }
+
+        #game-wrapper {
             position: relative;
             z-index: 10;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 4rem 5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15);
-            text-align: center;
-            min-width: 450px;
-            transition: box-shadow 1s ease, border-color 1s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.05), 0 0 40px rgba(0, 255, 255, 0.05);
+            border: 2px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 4px;
         }
 
-        .clock {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 6rem;
-            font-weight: 700;
-            letter-spacing: 4px;
-            text-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
-            margin-bottom: 0.5rem;
-            color: var(--text-main);
-            transition: text-shadow 1s ease;
+        canvas {
+            display: block;
         }
 
-        .clock span {
-            color: var(--accent);
+        /* Kamera Titremesi (Camera Shake) */
+        @keyframes shake {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
 
-        .date {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 3rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 300;
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
         }
 
-        .weather-container {
+        /* Renk Bozulmasi (Glitch) Efekti */
+        @keyframes glitch-anim {
+            0% { filter: hue-rotate(0deg) contrast(1); }
+            20% { filter: hue-rotate(90deg) contrast(1.5) invert(0.1); transform: translate(-3px, 3px); }
+            40% { filter: hue-rotate(-90deg) contrast(0.8) invert(0); transform: translate(3px, -3px); }
+            60% { filter: hue-rotate(180deg) contrast(2) invert(0.2); transform: translate(-3px, -3px); }
+            80% { filter: hue-rotate(-45deg) contrast(1.2) invert(0); transform: translate(3px, 3px); }
+            100% { filter: hue-rotate(0deg) contrast(1); transform: translate(0); }
+        }
+
+        .glitch-effect {
+            animation: glitch-anim 0.4s cubic-bezier(.25,.46,.45,.94) both;
+        }
+
+        /* Oyun Bitti Ekrani */
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2rem;
-            padding-top: 2.5rem;
-            border-top: 1px solid var(--glass-border);
-            transition: border-color 1s ease;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
 
-        .weather-icon {
+        #game-over-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Glitchy Text */
+        .glitch-text {
             font-size: 3.5rem;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+            font-weight: 900;
+            color: #fff;
+            position: relative;
+            text-transform: uppercase;
+            text-shadow: 0.05em 0 0 rgba(255,0,0,.75), -0.025em -0.05em 0 rgba(0,255,0,.75), 0.025em 0.05em 0 rgba(0,0,255,.75);
+            animation: glitch 1s infinite alternate-reverse;
+            margin-bottom: 50px;
+            letter-spacing: 5px;
         }
 
-        .weather-info {
-            text-align: left;
+        @keyframes glitch {
+            0% { text-shadow: 0.05em 0 0 rgba(255,0,0,.75), -0.05em -0.025em 0 rgba(0,255,0,.75), -0.025em 0.05em 0 rgba(0,0,255,.75); transform: skewX(0); }
+            14% { text-shadow: 0.05em 0 0 rgba(255,0,0,.75), -0.05em -0.025em 0 rgba(0,255,0,.75), -0.025em 0.05em 0 rgba(0,0,255,.75); transform: skewX(0); }
+            15% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,.75), 0.025em 0.025em 0 rgba(0,255,0,.75), -0.05em -0.05em 0 rgba(0,0,255,.75); transform: skewX(-5deg); }
+            49% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,.75), 0.025em 0.025em 0 rgba(0,255,0,.75), -0.05em -0.05em 0 rgba(0,0,255,.75); transform: skewX(-5deg); }
+            50% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,.75), 0.05em 0 0 rgba(0,255,0,.75), 0 -0.05em 0 rgba(0,0,255,.75); transform: skewX(2deg); }
+            99% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,.75), 0.05em 0 0 rgba(0,255,0,.75), 0 -0.05em 0 rgba(0,0,255,.75); transform: skewX(2deg); }
+            100% { text-shadow: -0.025em 0 0 rgba(255,0,0,.75), -0.025em -0.025em 0 rgba(0,255,0,.75), -0.025em -0.05em 0 rgba(0,0,255,.75); transform: skewX(0); }
         }
 
-        .temp {
-            font-size: 3rem;
-            font-weight: 500;
-            line-height: 1;
-            margin-bottom: 0.2rem;
-            color: var(--text-main);
+        .cyber-btn {
+            background: transparent;
+            color: var(--neon-blue);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 15px 30px;
+            border: 2px solid var(--neon-blue);
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px var(--neon-blue);
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
 
-        .desc {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            text-transform: capitalize;
-        }
-        
-        .glow {
+        .cyber-btn::before {
+            content: '';
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: var(--accent);
-            border-radius: 50%;
-            filter: blur(180px);
-            opacity: 0.15;
-            z-index: 0;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: pulse 6s infinite alternate;
-            transition: background 1s ease;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
         }
 
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.1; }
-            100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.25; }
+        .cyber-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px var(--neon-blue), inset 0 0 15px var(--neon-blue);
+            color: #fff;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-blue);
         }
 
-        .loader {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            border-top-color: var(--accent);
-            animation: spin 1s ease-in-out infinite;
+        .cyber-btn:hover::before {
+            left: 100%;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* Skor Artis Efekti */
+        .score-bump {
+            transform: scale(1.3);
+            color: #fff;
         }
+
     </style>
 </head>
 <body>
-    <!-- Arkadaki parıltı efekti -->
-    <div class="glow"></div>
-    
-    <!-- Ana Pano -->
-    <div class="dashboard">
-        <div class="clock" id="clock">00<span>:</span>00<span>:</span>00</div>
-        <div class="date" id="date">Takvim Yükleniyor...</div>
-        
-        <div class="weather-container">
-            <div class="weather-icon" id="weather-icon">
-                <div class="loader"></div>
+
+    <div class="ui-container">
+        <div class="scoreboard">
+            <div class="score-box">
+                <span class="score-label">Mevcut Skor</span>
+                <span class="score-value" id="current-score">0</span>
             </div>
-            <div class="weather-info">
-                <div class="temp" id="temp">--°C</div>
-                <div class="desc" id="weather-desc">Hava Durumu Yükleniyor</div>
+            <div class="score-box">
+                <span class="score-label">En Yüksek</span>
+                <span class="score-value high-score-value" id="high-score">0</span>
             </div>
         </div>
     </div>
 
+    <div id="game-wrapper">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <div id="game-over-screen">
+            <div class="glitch-text" data-text="GAME OVER">GAME OVER</div>
+            <button class="cyber-btn" id="restart-btn">Yeniden Başla</button>
+        </div>
+    </div>
+
     <script>
-        // DOM Elementleri
-        const clockEl = document.getElementById('clock');
-        const dateEl = document.getElementById('date');
-        const tempEl = document.getElementById('temp');
-        const descEl = document.getElementById('weather-desc');
-        const iconEl = document.getElementById('weather-icon');
-        const root = document.documentElement;
+        // --- DOM Elementleri ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('current-score');
+        const highScoreEl = document.getElementById('high-score');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const restartBtn = document.getElementById('restart-btn');
+        const gameWrapper = document.getElementById('game-wrapper');
 
-        // Saat ve Tarih Güncelleme
-        function updateTime() {
-            const now = new Date();
+        // --- Oyun Sabitleri ---
+        const GRID_SIZE = 25; // Hucre boyutu
+        const TILE_COUNT = canvas.width / GRID_SIZE; // 600 / 25 = 24 hucre
+        
+        // --- Hiz ve Zorluk Ayarlari ---
+        const INITIAL_SPEED = 140; // Baslangicta iki kare arasindaki gecikme (ms)
+        const MIN_SPEED = 50; // Maksimum hiz (minimum gecikme ms)
+        const SPEED_DECREMENT = 2; // Her yemde hiz inisi
+
+        // --- Oyun Durum Degiskenleri ---
+        let snake = [];
+        let velocity = { x: 0, y: 0 };
+        let nextVelocity = { x: 0, y: 0 }; // Ayni kare icinde hizli 2 tusa basilmasini engellemek icin
+        let food = { x: 0, y: 0 };
+        let score = 0;
+        let highScore = localStorage.getItem('cp_snake_highscore') || 0;
+        let gameActive = false;
+        
+        // requestAnimationFrame Icin Zamanlayici
+        let lastRenderTime = 0;
+        let moveInterval = INITIAL_SPEED;
+
+        // Animasyonlar saniye ici degerleri
+        let lastTimeForPulse = 0;
+        let foodGlowPhase = 0;
+
+        // --- Baslangic ---
+        highScoreEl.textContent = highScore;
+        initGame();
+
+        function initGame() {
+            // Yilani baslangic konumuna getir (Ortalarda 3 parca)
+            snake = [
+                { x: 10, y: 12 },
+                { x: 9, y: 12 },
+                { x: 8, y: 12 }
+            ];
             
-            // Saat
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
+            // Saga dogru gidis
+            velocity = { x: 1, y: 0 };
+            nextVelocity = { x: 1, y: 0 };
             
-            // Saniyeleri ve dakikaları ayıran noktalara renk katıyoruz
-            clockEl.innerHTML = `${hours}<span>:</span>${minutes}<span>:</span>${seconds}`;
-
-            // Tarih
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            dateEl.textContent = now.toLocaleDateString('tr-TR', options);
-
-            // Arka Plan Rengi: Her saat başı veya saniyede bir kontrol edilebilir (saate göre değişir)
-            updateThemeByHour(now.getHours());
+            score = 0;
+            moveInterval = INITIAL_SPEED;
+            scoreEl.textContent = score;
+            
+            placeFood();
+            
+            gameActive = true;
+            gameOverScreen.classList.remove('active');
+            gameWrapper.classList.remove('shake');
+            gameWrapper.classList.remove('glitch-effect');
+            
+            // Animasyon Dongusunu Baslat
+            requestAnimationFrame(gameLoop);
         }
 
-        // Günün saatine göre tema değişikliği
-        function updateThemeByHour(hour) {
-            let startColor, endColor, accentColor;
+        // --- Ana Animasyon Dongusu ---
+        function gameLoop(currentTime) {
+            if (!gameActive) return;
 
-            if (hour >= 6 && hour < 12) {
-                // Sabah - Şafak Renkleri (Hafif aydınlık mavimsi)
-                startColor = '#0f172a';
-                endColor = '#1e1b4b';
-                accentColor = '#60a5fa'; // Açık mavi vurgu
-            } else if (hour >= 12 && hour < 18) {
-                // Öğle - Parlak Renkler (Canlı mavi)
-                startColor = '#020617';
-                endColor = '#172554';
-                accentColor = '#38bdf8'; // Gök mavisi vurgu
-            } else if (hour >= 18 && hour < 21) {
-                // Akşam - Gün Batımı/Akşam (Mor-lacivert)
-                startColor = '#0f172a';
-                endColor = '#312e81';
-                accentColor = '#818cf8'; // İndigo vurgu
-            } else {
-                // Gece (Derin karanlık, neon cyan)
-                startColor = '#020617';
-                endColor = '#000000';
-                accentColor = '#22d3ee'; // Neon Cyan vurgu
+            window.requestAnimationFrame(gameLoop);
+
+            // Gecen sure
+            const secSinceLastRender = currentTime - lastRenderTime;
+            const delta = currentTime - lastTimeForPulse;
+            lastTimeForPulse = currentTime;
+            
+            // Yem parlama evresini artir
+            foodGlowPhase += delta * 0.005;
+
+            if (secSinceLastRender < moveInterval) {
+                // Sadece cizim guncellenir, mantik hala bekler. (Animasyonlarin akici calismasi icin)
+                draw();
+                return;
             }
 
-            // CSS Değişkenlerini güncelle
-            root.style.setProperty('--bg-color-start', startColor);
-            root.style.setProperty('--bg-color-end', endColor);
-            root.style.setProperty('--accent', accentColor);
+            lastRenderTime = currentTime;
+            
+            update();
+            draw();
         }
 
-        // Açık kaynak ve ücretsiz Open-Meteo API (API anahtarı gerekmez) kullanarak hava durumu çekme
-        async function fetchWeather(lat, lon) {
-            try {
-                // WMO (Dünya Meteoroloji Örgütü) kodlarını açıklamalara ve emojilere (veya ikonlara) çevirme
-                const weatherCodes = {
-                    0: { desc: 'Açık, Güneşli', icon: '☀️' },
-                    1: { desc: 'Çoğunlukla Açık', icon: '🌤️' },
-                    2: { desc: 'Parçalı Bulutlu', icon: '⛅' },
-                    3: { desc: 'Kapalı, Bulutlu', icon: '☁️' },
-                    45:{ desc: 'Sisli', icon: '🌫️' },
-                    48:{ desc: 'Kırağılı Sis', icon: '🌫️' },
-                    51:{ desc: 'Hafif Çiseleme', icon: '🌧️' },
-                    53:{ desc: 'Orta Şiddette Çiseleme', icon: '🌧️' },
-                    55:{ desc: 'Yoğun Çiseleme', icon: '🌧️' },
-                    61:{ desc: 'Hafif Yağmurlu', icon: '🌦️' },
-                    63:{ desc: 'Yağmurlu', icon: '🌧️' },
-                    65:{ desc: 'Şiddetli Yağmur', icon: '⛈️' },
-                    71:{ desc: 'Hafif Kar Yağışlı', icon: '🌨️' },
-                    73:{ desc: 'Kar Yağışlı', icon: '❄️' },
-                    75:{ desc: 'Yoğun Kar Yağışlı', icon: '❄️' },
-                    95:{ desc: 'Gök Gürültülü Fırtına', icon: '🌩️' }
-                };
+        // --- Oyun Mantigini Guncelle ---
+        function update() {
+            // Yonu Guncelle (kuyruga donme engelli)
+            velocity = nextVelocity;
 
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-                const response = await fetch(url);
-                const data = await response.json();
+            // Yeni Bas Pozisyonunu Hesapla
+            const prevHead = snake[0];
+            const newHead = {
+                x: prevHead.x + velocity.x,
+                y: prevHead.y + velocity.y
+            };
+
+            // Carpima Kontrolleri (Duvarlar ve Kuyruk)
+            if (isCollision(newHead)) {
+                triggerGameOver();
+                return;
+            }
+
+            // Yeni basi yilana ekle
+            snake.unshift(newHead);
+
+            // Yem Yenilme Kontrolu
+            if (newHead.x === food.x && newHead.y === food.y) {
+                score++;
+                updateScoreUI();
                 
-                const current = data.current_weather;
-                const codeData = weatherCodes[current.weathercode] || { desc: 'Bilinmiyor', icon: '🌡️' };
-
-                // Arayüzü güncelle
-                tempEl.textContent = `${Math.round(current.temperature)}°C`;
-                descEl.textContent = codeData.desc;
-                iconEl.textContent = codeData.icon;
-
-            } catch (error) {
-                console.error("Hava durumu alınamadı:", error);
-                tempEl.textContent = '--°C';
-                descEl.textContent = 'Bağlantı Hatası';
-                iconEl.textContent = '❌';
-            }
-        }
-
-        // İlk Yükleme (Init)
-        function init() {
-            // Saati anında başlat
-            updateTime();
-            // Her saniye saati güncelle
-            setInterval(updateTime, 1000);
-
-            // Kullanıcıdan konum izni isteyip hava durumunu al
-            if (navigator.geolocation) {
-                // Hava durumunu çekerken bekleme ikonu göstereceği için bekliyor
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        fetchWeather(position.coords.latitude, position.coords.longitude);
-                    },
-                    (error) => {
-                        console.warn("Konum izni verilmedi veya alınamadı. Varsayılan konum (İstanbul) kullanılıyor.");
-                        // Konum verilmezse İstanbul'un enlem/boylamını varsayılan olarak kullan
-                        fetchWeather(41.0082, 28.9784);
-                    }
-                );
-            } else {
-                // Tarayıcı desteklemiyorsa varsayılan konum
-                fetchWeather(41.0082, 28.9784);
-            }
-
-            // Hava durumunu her 15 dakikada bir güncelle
-            setInterval(() => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-                        () => fetchWeather(41.0082, 28.9784)
-                    );
+                // Zorluk Egrisi: Hizlan
+                if (moveInterval > MIN_SPEED) {
+                    // Cok aniden hizlanmamasi ve yari yariya dusmemesi icin logaritmaya yakin dogrusal dusus
+                    moveInterval -= SPEED_DECREMENT;
                 }
-            }, 15 * 60 * 1000);
+
+                placeFood();
+            } else {
+                // Yem yenmediyse kuyruktan cikararak hareketi tamamla
+                snake.pop(); 
+            }
         }
 
-        // Sayfa DOM'u hazır olduğunda çalıştır
-        document.addEventListener('DOMContentLoaded', init);
+        // --- Carpima Kontrol (Collision) ---
+        function isCollision(pos) {
+            // Duvar kontrolu
+            if (pos.x < 0 || pos.x >= TILE_COUNT || pos.y < 0 || pos.y >= TILE_COUNT) {
+                return true;
+            }
+            
+            // Kendi Govdesi kontrolu
+            for (let i = 0; i < snake.length; i++) {
+                if (pos.x === snake[i].x && pos.y === snake[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // --- Cizim Islemleri ---
+        function draw() {
+            // Ekran Temizleme
+            ctx.fillStyle = 'rgba(10, 10, 10, 1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Arkaplan Grid cizgileri
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.04)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += GRID_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            drawFood();
+            drawSnake();
+        }
+
+        // --- Yilani Ciz ---
+        function drawSnake() {
+            for (let i = 0; i < snake.length; i++) {
+                const isHead = (i === 0);
+                const part = snake[i];
+                const x = part.x * GRID_SIZE;
+                const y = part.y * GRID_SIZE;
+
+                // Cyberpunk Neon Glow
+                ctx.shadowBlur = isHead ? 25 : 10;
+                ctx.shadowColor = '#00ff00';
+                
+                // Renklendirme
+                ctx.fillStyle = isHead ? '#afffa0' : '#00ff00';
+                
+                // Govdeleri %10 daha kucuk cizelim aradaki bosluklar detay katsin
+                const gap = 2;
+                ctx.fillRect(x + gap, y + gap, GRID_SIZE - (gap*2), GRID_SIZE - (gap*2));
+
+                // Basa minik detay ekleme
+                if (isHead) {
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#fff';
+                    // Gidis yonune gore goz ekleme
+                    const eyeSize = 4;
+                    let ex1 = x + GRID_SIZE/2; let ey1 = y + GRID_SIZE/2;
+                    let ex2 = ex1; let ey2 = ey1;
+                    
+                    if (velocity.x === 1) { ex1+=2; ey1-=6; ex2+=2; ey2+=2; } // Sag
+                    else if (velocity.x === -1) { ex1-=6; ey1-=6; ex2-=6; ey2+=2; } // Sol
+                    else if (velocity.y === 1) { ex1-=6; ey1+=2; ex2+=2; ey2+=2; } // Asagi
+                    else if (velocity.y === -1) { ex1-=6; ey1-=6; ex2+=2; ey2-=6; } // Yukari
+
+                    ctx.fillRect(ex1, ey1, eyeSize, eyeSize);
+                    ctx.fillRect(ex2, ey2, eyeSize, eyeSize);
+                }
+            }
+            ctx.shadowBlur = 0; // Sifirlama
+        }
+
+        // --- Yemi Ciz (Pulsing) ---
+        function drawFood() {
+            const x = food.x * GRID_SIZE;
+            const y = food.y * GRID_SIZE;
+
+            // Animasyonlu Glow hesaplama
+            const pulse = (Math.sin(foodGlowPhase) + 1) / 2; // 0 ile 1 arasi
+            const blurSize = 10 + (pulse * 20); 
+            
+            // Renk gecisli isik secimi (Pembe ve Elektrik Mavisi)
+            const colorPhase = Math.sin(foodGlowPhase * 0.5) > 0 ? '#ff00ff' : '#00ffff';
+
+            ctx.shadowBlur = blurSize;
+            ctx.shadowColor = colorPhase;
+            ctx.fillStyle = colorPhase;
+
+            const gap = 4;
+            ctx.fillRect(x + gap, y + gap, GRID_SIZE - (gap*2), GRID_SIZE - (gap*2));
+            
+            // Icteki akor beyaz merkez
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + gap + 4, y + gap + 4, GRID_SIZE - (gap*2) - 8, GRID_SIZE - (gap*2) - 8);
+        }
+
+        // --- Yemi Haritaya Ekle ---
+        function placeFood() {
+            let valid = false;
+            while (!valid) {
+                food.x = Math.floor(Math.random() * TILE_COUNT);
+                food.y = Math.floor(Math.random() * TILE_COUNT);
+                
+                valid = true;
+                // Yilanin ustune gelmemeli
+                for (let part of snake) {
+                    if (part.x === food.x && part.y === food.y) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // --- Skor Guncelleme ---
+        function updateScoreUI() {
+            scoreEl.textContent = score;
+            
+            // Animasyon kucuk dokunusu
+            scoreEl.classList.remove('score-bump');
+            void scoreEl.offsetWidth; // Trigger reflow
+            scoreEl.classList.add('score-bump');
+            setTimeout(() => scoreEl.classList.remove('score-bump'), 150);
+        }
+
+        // --- Oyun Bitti Mantigi ---
+        function triggerGameOver() {
+            gameActive = false;
+            
+            // Efektleri calistir
+            gameWrapper.classList.add('shake');
+            gameWrapper.classList.add('glitch-effect');
+
+            // High Score Kaydi LocalStorage
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('cp_snake_highscore', highScore);
+                highScoreEl.textContent = highScore;
+            }
+
+            // Kisa bir gecikmeyle arayuzu goster ki efekt izlensin
+            setTimeout(() => {
+                gameOverScreen.classList.add('active');
+            }, 400);
+        }
+
+        // --- Klavye Kontrolleri ---
+        window.addEventListener('keydown', e => {
+            // Yilana yon ver (Kendi yonunun tersine gidilemez)
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    if (velocity.y !== 1) nextVelocity = { x: 0, y: -1 };
+                    e.preventDefault(); // Sayfanin kaymasini onle
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    if (velocity.y !== -1) nextVelocity = { x: 0, y: 1 };
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    if (velocity.x !== 1) nextVelocity = { x: -1, y: 0 };
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    if (velocity.x !== -1) nextVelocity = { x: 1, y: 0 };
+                    e.preventDefault();
+                    break;
+            }
+        });
+
+        // --- Buton Etkilesimleri ---
+        restartBtn.addEventListener('click', () => {
+            initGame();
+        });
+
+        // Ekleme: Bosluga basarak yeniden baslatma destegi
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space' && !gameActive) {
+                initGame();
+                e.preventDefault();
+            }
+        });
+
     </script>
 </body>
 </html>
